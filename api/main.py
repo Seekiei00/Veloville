@@ -17,8 +17,8 @@ def sante():
     return {"statut": "ok"}
 
 
-# app.include_router(auth.router)
-# app.include_router(stations.router)
-# app.include_router(trajets.router)
-# app.include_router(incidents.router)
-# app.include_router(indicateurs.router)
+app.include_router(auth.router)
+app.include_router(stations.router)
+app.include_router(trajets.router)
+app.include_router(incidents.router)
+app.include_router(indicateurs.router)
