@@ -22,8 +22,7 @@ args = parser.parse_args()
 date_limite = datetime.now() - timedelta(days=args.jours)
 
 with SessionLocal() as session:
-    nombre = session.scalar(text("SELECT count(*) FROM trajet WHERE depart_horodatage < :limite"),
-                            {"limite": date_limite})
+    nombre = session.scalar(text("SELECT count(*) FROM trajet WHERE depart_horodatage < :limite"), {"limite": date_limite})
     if args.appliquer:
         session.execute(text("DELETE FROM trajet WHERE depart_horodatage < :limite"), {"limite": date_limite})
         session.commit()
