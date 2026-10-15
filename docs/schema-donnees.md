@@ -1,11 +1,5 @@
 # Schéma de données
 
-À compléter : MLD textuel ou image, description des tables, clés et contraintes,
-règles de gestion portées par le schéma.
-
-
-# Schéma de données
-
 La base `veloville` est créée par `sql/schema.sql`. Le script peut être
 relancé : il supprime puis recrée les tables.
 

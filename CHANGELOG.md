@@ -3,6 +3,28 @@
 Format : une section par version, les changements regroupés en « Ajouté »,
 « Modifié », « Corrigé ». Chaque version correspond à un tag Git `vX.Y.Z`.
 
+## [1.0.1] - 2026-10-15
+
+Version après la recette.
+
+### Ajouté
+- Résultats de recette (`docs/recette/resultats-recette.md`) : relevé du
+  premier passage et du rejeu, preuves, captures d'écran du front, synthèse,
+  procès-verbal et axes d'amélioration.
+- Fiche d'anomalie `docs/recette/anomalies/ANO-001.md`.
+- Test de non-régression `test_ano_001_api_url_en_ipv4`.
+
+### Modifié
+- README : valeur d'`API_URL` mise à jour.
+- `docs/schema-donnees.md` : suppression du texte du squelette resté en tête
+  du document.
+
+### Corrigé
+- ANO-001 : chaque appel à l'API prenait environ 2 s, car `localhost` est
+  d'abord résolu en IPv6 sous Windows alors que l'API écoute en IPv4.
+  `API_URL` passe à `http://127.0.0.1:8000` : les appels prennent maintenant
+  quelques millisecondes.
+
 ## [1.0.0] - 2026-10-14
 
 Version livrée en recette.

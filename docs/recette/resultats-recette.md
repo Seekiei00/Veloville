@@ -31,6 +31,32 @@ dans l'ordre, à partir d'un état connu, sans correction pendant le passage.
 | REC-09 | 15/10/2026 09:11 | v1.0.0 (`dad729c`) | OK | [§ REC-09](#rec-09--cohérence-de-lindicateur--activité-par-jour--avec-la-base--ok) | ANO-001 (lenteur) |
 | REC-10 | 15/10/2026 09:25 | v1.0.0 (`dad729c`) | OK | [§ REC-10](#rec-10--front--état-vide-et-état-derreur--ok) | — |
 
+## Rejeu après correction de ANO-001
+
+Correction fusionnée dans `main` (commit `f6166ce`). Base remise à l'état
+connu (`schema.sql`, `comptes.sql`), puis cas rejoués dans l'ordre. Les
+appels à l'API sont faits sur `http://127.0.0.1:8000`, la nouvelle valeur de
+`API_URL`.
+
+| Cas | Date et heure | Version testée | Statut | Résultat obtenu | Anomalie |
+|---|---|---|---|---|---|
+| REC-01 | 15/10/2026 09:51 | `f6166ce` | OK | 2 imports sans erreur (code retour 0), 120 / 2002 / 177 les deux fois | — |
+| REC-02 | 15/10/2026 09:51 | `f6166ce` | OK | mêmes volumes et même journal qu'au premier passage, 0 champ vide, 0 orphelin | — |
+| REC-03 | 15/10/2026 09:51 | `f6166ce` | OK | 200 pour les 2 comptes, bon rôle (281 ms et 195 ms, dont bcrypt) | ANO-001 corrigée |
+| REC-04 | 15/10/2026 09:51 | `f6166ce` | OK | 401 « Identifiants invalides » dans les 2 cas (219 ms, 26 ms) | ANO-001 corrigée |
+| REC-05 | 15/10/2026 09:51 | `f6166ce` | OK | 401, 401, puis `/sante` 200 (10 à 25 ms) | ANO-001 corrigée |
+| REC-06 | 15/10/2026 09:51 | `f6166ce` | OK | 403, `ouvert`, 200, `en_cours`, 422 (24 à 35 ms) | ANO-001 corrigée |
+| REC-07 | 15/10/2026 09:51 | `f6166ce` | OK | 120 / 50 résultats / S001, 20 résultats, Lille = 46, 422, 422 (8 à 25 ms) | ANO-001 corrigée |
+| REC-08 | 15/10/2026 09:51 | `f6166ce` | OK | S001 « Lille - Gare », S999 → 404 (36 ms, 8 ms) | ANO-001 corrigée |
+| REC-09 | 15/10/2026 09:51 | `f6166ce` | OK | API et SQL identiques jour par jour, somme = total = 2002 (12 ms, 29 ms) | ANO-001 corrigée |
+| REC-10 | — | — | non rejoué | non concerné par la correction (comportement du front inchangé) ; résultat du premier passage conservé | — |
+
+Mesure après correction : `GET http://127.0.0.1:8000/sante` → 39 ms, 7 ms,
+7 ms. Le temps de réponse respecte l'exigence 7.1 (moins de 2 s).
+
+Après le rejeu, la base a été remise à l'état de référence par un nouvel
+import (REC-06 modifie l'incident `I2026-0002`).
+
 ## Résultats obtenus et preuves
 
 ### REC-01 — Import idempotent : OK
@@ -319,13 +345,74 @@ Observation : sur l'écran Incidents, les dates s'affichent au format
 
 ## Synthèse
 
-À compléter à la fin de la campagne : N cas exécutés sur 10 ; N OK, N KO,
-N NT ; N anomalies ouvertes, N corrigées.
+| Indicateur | Premier passage (`v1.0.0`) | Rejeu (`f6166ce`) |
+|---|---|---|
+| Cas exécutés | 10 sur 10 | 9 (REC-01 à REC-09) ; REC-10 non concerné |
+| OK / KO / NT | 10 / 0 / 0 | 9 / 0 / 0 |
+| Anomalies relevées | 1 (ANO-001, S2, temps de réponse) | — |
+| Anomalies corrigées et rejouées OK | — | 1 |
+| Anomalies ouvertes | 1 | 0 |
 
-## Procès-verbal de recette
+Au format du plan : 10 cas exécutés sur 10 ; 10 OK, 0 KO, 0 NT ;
+0 anomalie ouverte, 1 corrigée.
 
-À compléter à la fin de la campagne (modèle dans le plan de recette).
+## Procès-verbal de recette — VéloVille V1 1.0.1
+
+### 1. Identification
+Application VéloVille : API FastAPI, front Streamlit, base PostgreSQL.
+Version testée : `v1.0.0` (`dad729c`) pour le premier passage, `f6166ce` pour
+le rejeu. Campagne du 15/10/2026, de 08:57 à 09:51. Environnement : poste
+Windows 11, Python 3.14.7, PostgreSQL 18. Participants : Mourad
+(développeur, exécution de la recette).
+
+### 2. Périmètre recetté
+Testés : les 10 cas du plan (REC-01 à REC-10) : import et journal,
+connexion, droits, pagination, ressource introuvable, cohérence d'un
+indicateur, états vide et erreur du front.
+Non testé : affichage sur tablette (largeur 768 px), faute de matériel.
+
+### 3. Résultats de la campagne
+10 cas prévus, 10 exécutés : 10 OK, 0 KO, 0 NT.
+Anomalies : 1 relevée (ANO-001), 1 corrigée et rejouée OK, 0 ouverte.
+
+### 4. Réserves bloquantes
+Néant.
+
+### 5. Réserves non bloquantes
+Néant. L'observation sur le format des dates de l'écran Incidents (REC-10)
+n'empêche aucun cas ; elle est reprise dans les axes d'amélioration.
+
+### 6. Décision
+Recette **PRONONCÉE**.
+Les dix cas donnent le résultat attendu, et la seule anomalie relevée
+(temps de réponse d'environ 2 s, ANO-001) a été corrigée, couverte par un
+test de non-régression et rejouée avec succès.
+
+### 7. Signatures
+Pour le commanditaire (VéloVille Hauts-de-France) : ………………… , le ……/……/2026
+Pour le développeur : Mourad, le 15/10/2026
 
 ## Axes d'amélioration
 
-À compléter à la fin de la campagne (au moins trois propositions argumentées).
+1. **Afficher les dates comme sur la maquette.** L'écran Incidents montre
+   `2026-08-30T18:00:00` au lieu de `2026-08-30 18:00`. Ce n'est pas
+   bloquant, mais c'est moins lisible pour les agents d'exploitation. Il
+   suffirait de remplacer le « T » et de retirer les secondes avant
+   l'affichage.
+2. **Rendre les tests indépendants des données de la recette.** Pendant la
+   recette, REC-06 a modifié l'incident `I2026-0002`, et le test
+   `test_put_statut_exploitant` a échoué tant que la base n'avait pas été
+   réimportée. Utiliser une base de test séparée (la variable
+   `DATABASE_TEST_URL` est déjà prévue dans `.env.example`) rendrait les
+   tests fiables quel que soit l'état de la base de travail.
+3. **Ne plus perdre les statuts lors d'un réimport.** L'import vide puis
+   recharge les tables : un incident passé « en_cours » dans l'application
+   redevient « ouvert ». Pour un import régulier en production, il faudrait
+   n'ajouter que les nouvelles lignes et garder le travail des exploitants.
+4. **Garder la session au rechargement de la page.** Un F5 dans le
+   navigateur déconnecte l'utilisateur, car le jeton n'est gardé qu'en
+   session Streamlit. C'est gênant pour les agents sur tablette ; un cookie
+   sécurisé permettrait de rester connecté.
+5. **Fonctions reportées à la V2 :** données météo, état des stations en
+   temps réel, rôle administrateur pour gérer les comptes sans SQL, export
+   CSV des tableaux pour le compte rendu mensuel au délégataire.
