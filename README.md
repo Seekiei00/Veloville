@@ -68,7 +68,7 @@ Le modèle est [`.env.example`](.env.example).
 | `JWT_SECRET` | clé secrète pour signer les jetons, à générer avec `python -c "import secrets; print(secrets.token_hex(32))"` | vide |
 | `JWT_ALGORITHM` | algorithme de signature | `HS256` |
 | `JWT_EXPIRATION_MINUTES` | durée de validité du jeton | `60` |
-| `API_URL` | adresse de l'API utilisée par le front | `http://localhost:8000` |
+| `API_URL` | adresse de l'API utilisée par le front | `http://127.0.0.1:8000` |
 | `API_TIMEOUT_SECONDES` | délai maximum d'un appel du front | `5` |
 | `MOT_DE_PASSE_RECETTE` | mot de passe des comptes de test, utilisé par les tests | vide |
 
