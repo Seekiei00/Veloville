@@ -12,6 +12,8 @@ from api.database import Base
 
 
 class Station(Base):
+    """Station de vélos du référentiel : emplacement, commune et capacité (RG1)."""
+
     __tablename__ = "station"
 
     station_id: Mapped[str] = mapped_column(String(10), primary_key=True)
@@ -24,6 +26,8 @@ class Station(Base):
 
 
 class Trajet(Base):
+    """Trajet d'un vélo entre deux stations ; l'arrivée est vide si le vélo n'est pas rendu (RG3)."""
+
     __tablename__ = "trajet"
 
     trajet_id: Mapped[str] = mapped_column(String(12), primary_key=True)
@@ -37,6 +41,8 @@ class Trajet(Base):
 
 
 class Incident(Base):
+    """Incident signalé sur un vélo ou une station (RG6), suivi par statut (RG7, RG8)."""
+
     __tablename__ = "incident"
 
     incident_id: Mapped[str] = mapped_column(String(12), primary_key=True)
@@ -51,6 +57,8 @@ class Incident(Base):
 
 
 class Utilisateur(Base):
+    """Compte de connexion à l'application : mot de passe haché (bcrypt) et rôle."""
+
     __tablename__ = "utilisateur"
 
     id_utilisateur: Mapped[int] = mapped_column(Integer, primary_key=True)

@@ -22,11 +22,13 @@ def lister_stations(
     taille_page: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
+    """Liste paginée des stations, filtrable par commune, triée par identifiant."""
     return consultation.lister_stations(db, commune, page, taille_page)
 
 
 @router.get("/{station_id}", response_model=StationSchema)
 def lire_station(station_id: str, db: Session = Depends(get_db)):
+    """Renvoie le détail d'une station ; 404 si l'identifiant est inconnu."""
     station = db.get(Station, station_id)
     if station is None:
         raise HTTPException(status_code=404, detail="Station introuvable")

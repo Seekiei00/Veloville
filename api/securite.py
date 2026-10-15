@@ -25,10 +25,12 @@ bearer = HTTPBearer(auto_error=False)
 
 
 def verifier_mot_de_passe(mot_de_passe, hachage):
+    """Vrai si le mot de passe en clair correspond au hachage bcrypt stocké."""
     return bcrypt.checkpw(mot_de_passe.encode(), hachage.encode())
 
 
 def creer_jeton(username, role):
+    """Crée un JWT signé contenant l'utilisateur, son rôle et une date d'expiration."""
     expiration = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRATION_MINUTES)
     contenu = {"sub": username, "role": role, "exp": expiration}
     return jwt.encode(contenu, JWT_SECRET, algorithm=JWT_ALGORITHM)

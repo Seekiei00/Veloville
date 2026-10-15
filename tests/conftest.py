@@ -19,17 +19,20 @@ MOT_DE_PASSE = os.getenv("MOT_DE_PASSE_RECETTE")
 
 @pytest.fixture
 def client():
+    """Client de test de l'API FastAPI, sans serveur uvicorn."""
     return TestClient(app)
 
 
 @pytest.fixture
 def session():
+    """Session de base de données ouverte pour le test, fermée ensuite."""
     session = SessionLocal()
     yield session
     session.close()
 
 
 def entete_connexion(client, username):
+    """Se connecte avec le compte de recette et renvoie l'en-tête Authorization ; ignore le test sans mot de passe."""
     if not MOT_DE_PASSE:
         pytest.skip("MOT_DE_PASSE_RECETTE n'est pas défini dans le .env")
     reponse = client.post("/auth/login", json={"username": username, "password": MOT_DE_PASSE})
@@ -38,9 +41,11 @@ def entete_connexion(client, username):
 
 @pytest.fixture
 def jeton_exploitant(client):
+    """En-tête d'authentification du compte exploitant01."""
     return entete_connexion(client, "exploitant01")
 
 
 @pytest.fixture
 def jeton_direction(client):
+    """En-tête d'authentification du compte direction01."""
     return entete_connexion(client, "direction01")

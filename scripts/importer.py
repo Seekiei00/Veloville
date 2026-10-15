@@ -32,6 +32,7 @@ JOURNAL = RACINE / "docs" / "journal-import.csv"
 
 
 def lire_csv(nom_fichier):
+    """Lit un fichier CSV du dossier data et renvoie ses lignes sous forme de dictionnaires."""
     with open(DOSSIER_DATA / nom_fichier, encoding="utf-8") as fichier:
         return list(csv.DictReader(fichier))
 
@@ -67,6 +68,7 @@ def traiter(nom_fichier, colonne_id, fiabiliser, journal):
 
 
 def main():
+    """Fiabilise les trois CSV, recharge la base de zéro et écrit le journal d'import."""
     journal = []
 
     stations, bilan_stations = traiter("stations.csv", "station_id", fiabiliser_station, journal)

@@ -14,6 +14,7 @@ app = FastAPI(title="API VéloVille")
 
 @app.get("/sante")
 def sante():
+    """Sonde de disponibilité : renvoie {"statut": "ok"} si l'API répond."""
     return {"statut": "ok"}
 
 

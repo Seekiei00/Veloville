@@ -21,12 +21,14 @@ class ErreurApi(Exception):
     """Erreur levée lorsque l'API est injoignable ou répond en erreur."""
 
     def __init__(self, message, code=None):
+        """Mémorise le message à afficher et le code HTTP éventuel."""
         super().__init__(message)
         self.message = message
         self.code = code  # code HTTP (None si l'API n'a pas répondu)
 
 
 def appeler_api(methode, chemin, jeton=None, params=None, corps=None):
+    """Appelle l'API avec le jeton et renvoie le JSON ; lève ErreurApi (message en français) en cas d'échec."""
     entetes = {}
     if jeton:
         entetes["Authorization"] = f"Bearer {jeton}"
@@ -49,12 +51,15 @@ def appeler_api(methode, chemin, jeton=None, params=None, corps=None):
 
 
 def connexion(username, password):
+    """Envoie les identifiants à /auth/login et renvoie le jeton et le rôle."""
     return appeler_api("POST", "/auth/login", corps={"username": username, "password": password})
 
 
 def lire(chemin, jeton, params=None):
+    """Effectue un GET authentifié sur `chemin` avec les paramètres de requête fournis."""
     return appeler_api("GET", chemin, jeton, params=params)
 
 
 def changer_statut_incident(jeton, incident_id, statut):
+    """Demande à l'API de passer l'incident au nouveau statut."""
     return appeler_api("PUT", f"/incidents/{incident_id}/statut", jeton, corps={"statut": statut})

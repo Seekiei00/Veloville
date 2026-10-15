@@ -18,6 +18,7 @@ class Rejet(Exception):
     """Ligne rejetée : on garde la colonne, la valeur et le motif pour le journal."""
 
     def __init__(self, colonne, valeur, motif):
+        """Mémorise la colonne fautive, la valeur lue et le motif du rejet."""
         super().__init__(motif)
         self.colonne = colonne
         self.valeur = valeur
@@ -130,6 +131,7 @@ def est_doublon(ligne, lignes_deja_vues):
 # Un avertissement est un tuple (colonne, valeur, motif).
 
 def fiabiliser_station(ligne):
+    """Valide une ligne de stations.csv (identifiant, capacité RG1, date) et la convertit."""
     station_id = normaliser_station_id(ligne["station_id"])
     if station_id is None:
         raise Rejet("station_id", ligne["station_id"], "identifiant de station invalide")
@@ -153,6 +155,7 @@ def fiabiliser_station(ligne):
 
 
 def fiabiliser_trajet(ligne, stations):
+    """Valide une ligne de trajets.csv (vélo, horodatage, stations, durée, usager) et la normalise."""
     avertissements = []
 
     velo_id = normaliser_velo_id(ligne["velo_id"])
@@ -200,6 +203,7 @@ def fiabiliser_trajet(ligne, stations):
 
 
 def fiabiliser_incident(ligne, stations):
+    """Valide une ligne d'incidents.csv (statut, cible, dates RG8, technicien) et la normalise."""
     avertissements = []
 
     statut = normaliser_statut(ligne["statut"])

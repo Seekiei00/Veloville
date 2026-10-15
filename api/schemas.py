@@ -14,6 +14,8 @@ from pydantic import BaseModel
 
 
 class StationSchema(BaseModel):
+    """Station renvoyée par l'API, construite à partir du modèle ORM."""
+
     station_id: str
     nom: str
     commune: str
@@ -26,6 +28,8 @@ class StationSchema(BaseModel):
 
 
 class TrajetSchema(BaseModel):
+    """Trajet renvoyé par l'API, construit à partir du modèle ORM."""
+
     trajet_id: str
     velo_id: str
     depart_horodatage: datetime
@@ -39,6 +43,8 @@ class TrajetSchema(BaseModel):
 
 
 class IncidentSchema(BaseModel):
+    """Incident renvoyé par l'API, construit à partir du modèle ORM."""
+
     incident_id: str
     date_signalement: datetime
     cible: str
@@ -54,6 +60,8 @@ class IncidentSchema(BaseModel):
 
 # Enveloppes paginées
 class PageStations(BaseModel):
+    """Page de stations : total, numéro et taille de page, résultats."""
+
     total: int
     page: int
     taille_page: int
@@ -61,6 +69,8 @@ class PageStations(BaseModel):
 
 
 class PageTrajets(BaseModel):
+    """Page de trajets : total, numéro et taille de page, résultats."""
+
     total: int
     page: int
     taille_page: int
@@ -68,6 +78,8 @@ class PageTrajets(BaseModel):
 
 
 class PageIncidents(BaseModel):
+    """Page d'incidents : total, numéro et taille de page, résultats."""
+
     total: int
     page: int
     taille_page: int
@@ -76,9 +88,13 @@ class PageIncidents(BaseModel):
 
 # Authentification et modification d'un incident
 class LoginSchema(BaseModel):
+    """Corps de POST /auth/login : identifiant et mot de passe en clair."""
+
     username: str
     password: str
 
 
 class ChangementStatut(BaseModel):
+    """Corps de PUT /incidents/{id}/statut : nouveau statut parmi les trois valeurs de RG7."""
+
     statut: Literal["ouvert", "en_cours", "resolu"]

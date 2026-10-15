@@ -17,6 +17,7 @@ def paginer(session, requete, page, taille_page):
 
 
 def lister_stations(session, commune, page, taille_page):
+    """Stations triées par identifiant, filtrées par commune si elle est fournie."""
     requete = select(Station).order_by(Station.station_id)
     if commune:
         requete = requete.where(Station.commune == commune)
@@ -24,6 +25,7 @@ def lister_stations(session, commune, page, taille_page):
 
 
 def lister_trajets(session, date_debut, date_fin, station, page, taille_page):
+    """Trajets triés par départ, filtrés par période (bornes incluses) et station de départ ou d'arrivée."""
     requete = select(Trajet).order_by(Trajet.depart_horodatage)
     if date_debut:
         requete = requete.where(Trajet.depart_horodatage >= date_debut)
@@ -36,6 +38,7 @@ def lister_trajets(session, date_debut, date_fin, station, page, taille_page):
 
 
 def lister_incidents(session, statut, page, taille_page):
+    """Incidents du plus récent au plus ancien, filtrés par statut s'il est fourni."""
     requete = select(Incident).order_by(Incident.date_signalement.desc())
     if statut:
         requete = requete.where(Incident.statut == statut)

@@ -29,6 +29,7 @@ client_api = TestClient(app)
 def api_en_memoire(monkeypatch):
     """Envoie les appels httpx du front vers l'API en mémoire."""
     def fausse_requete(methode, url, headers=None, params=None, json=None, timeout=None):
+        """Remplace httpx.request : transmet l'appel au TestClient en gardant le chemin."""
         chemin = "/" + url.split("/", 3)[3]  # "http://127.0.0.1:8000/stations" -> "/stations"
         return client_api.request(methode, chemin, headers=headers, params=params, json=json)
 
@@ -36,10 +37,12 @@ def api_en_memoire(monkeypatch):
 
 
 def ouvrir_connexion():
+    """Lance l'écran de connexion du front et renvoie l'AppTest."""
     return AppTest.from_file(str(DOSSIER_FRONT / "app.py"), default_timeout=30).run()
 
 
 def se_connecter(username, mot_de_passe):
+    """Remplit et valide le formulaire de connexion, puis renvoie l'écran obtenu."""
     ecran = ouvrir_connexion()
     ecran.text_input[0].input(username)
     ecran.text_input[1].input(mot_de_passe)
@@ -49,6 +52,7 @@ def se_connecter(username, mot_de_passe):
 
 @pytest.fixture
 def exploitant():
+    """Écran du front connecté avec le compte exploitant01."""
     if not MOT_DE_PASSE:
         pytest.skip("MOT_DE_PASSE_RECETTE n'est pas défini dans le .env")
     return se_connecter("exploitant01", MOT_DE_PASSE)
@@ -56,6 +60,7 @@ def exploitant():
 
 @pytest.fixture
 def direction():
+    """Écran du front connecté avec le compte direction01."""
     if not MOT_DE_PASSE:
         pytest.skip("MOT_DE_PASSE_RECETTE n'est pas défini dans le .env")
     return se_connecter("direction01", MOT_DE_PASSE)
@@ -69,6 +74,7 @@ def textes(ecran, type_element):
 # ---------- Écran de connexion ----------
 
 def test_connexion_ok(exploitant):
+    """La connexion réussie affiche le rôle sans jamais afficher le jeton."""
     assert not exploitant.exception
     assert "Connecté en tant que exploitant01 (rôle : exploitant)." in textes(exploitant, "success")
     # le jeton est en session mais n'est jamais affiché
@@ -78,12 +84,14 @@ def test_connexion_ok(exploitant):
 
 
 def test_connexion_ko():
+    """Une connexion échouée affiche une erreur et ne stocke pas de jeton."""
     ecran = se_connecter("exploitant01", "mauvais")
     assert textes(ecran, "error") == ["Identifiant ou mot de passe incorrect."]
     assert "jeton" not in ecran.session_state
 
 
 def test_page_sans_connexion():
+    """Une page ouverte sans connexion demande de se connecter et n'affiche rien."""
     ecran = ouvrir_connexion()
     ecran.switch_page("pages/1_Stations.py").run()
     assert textes(ecran, "warning") == ["Veuillez vous connecter."]
@@ -93,6 +101,7 @@ def test_page_sans_connexion():
 # ---------- Écran Stations ----------
 
 def test_stations(exploitant):
+    """L'écran Stations affiche un tableau de 20 lignes avec les bonnes colonnes."""
     exploitant.switch_page("pages/1_Stations.py").run()
     assert not exploitant.exception
     assert len(exploitant.dataframe) == 1
@@ -101,6 +110,7 @@ def test_stations(exploitant):
 
 
 def test_stations_filtre_commune(exploitant):
+    """Le filtre Commune de l'écran Stations ne montre que Lille."""
     exploitant.switch_page("pages/1_Stations.py").run()
     exploitant.selectbox[0].select("Lille").run()
     assert "46 stations au total" in [element.value for element in exploitant.markdown]
@@ -108,6 +118,7 @@ def test_stations_filtre_commune(exploitant):
 
 
 def test_stations_page_au_dela_de_la_derniere(exploitant):
+    """Une page au-delà de la dernière affiche « Aucun résultat »."""
     exploitant.switch_page("pages/1_Stations.py").run()
     exploitant.number_input[0].set_value(99).run()
     assert textes(exploitant, "info") == ["Aucun résultat pour ces critères."]
@@ -116,6 +127,7 @@ def test_stations_page_au_dela_de_la_derniere(exploitant):
 # ---------- Écran Incidents ----------
 
 def test_incidents_exploitant_change_un_statut(exploitant):
+    """L'exploitant change le statut d'un incident depuis l'écran Incidents."""
     exploitant.switch_page("pages/2_Incidents.py").run()
     exploitant.selectbox[0].select("ouvert").run()
     incident_id = exploitant.selectbox[2].value  # liste « Incident » du formulaire
@@ -134,6 +146,7 @@ def test_incidents_exploitant_change_un_statut(exploitant):
 
 
 def test_incidents_direction_section_masquee(direction):
+    """Le rôle direction voit les incidents sans le formulaire de modification."""
     direction.switch_page("pages/2_Incidents.py").run()
     assert not direction.exception
     assert len(direction.dataframe) == 1
@@ -144,6 +157,7 @@ def test_incidents_direction_section_masquee(direction):
 # ---------- Écran Indicateurs ----------
 
 def test_indicateurs(direction):
+    """L'écran Indicateurs affiche les métriques et les trois tableaux attendus."""
     direction.switch_page("pages/3_Indicateurs.py").run()
     assert not direction.exception
     metriques = {m.label: m.value for m in direction.metric}
@@ -156,7 +170,9 @@ def test_indicateurs(direction):
 # ---------- API arrêtée ----------
 
 def test_api_arretee_message_en_francais(direction, monkeypatch):
+    """API arrêtée : chaque écran affiche un message en français, sans trace Python."""
     def api_injoignable(*args, **kwargs):
+        """Simule une API arrêtée en levant une erreur de connexion."""
         raise httpx.ConnectError("connexion refusée")
 
     monkeypatch.setattr(httpx, "request", api_injoignable)

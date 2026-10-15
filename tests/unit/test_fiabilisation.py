@@ -49,16 +49,19 @@ STATION = {
 # ---------- Règles élémentaires ----------
 
 def test_station_id():
+    """Normalisation de l'identifiant de station (S + 3 chiffres)."""
     assert normaliser_station_id("s001") == "S001"
     assert normaliser_station_id("STATION1") is None
 
 
 def test_velo_id():
+    """Normalisation de l'identifiant de vélo (V + 4 chiffres)."""
     assert normaliser_velo_id("v1281") == "V1281"
     assert normaliser_velo_id("V12") is None
 
 
 def test_entier_positif():
+    """Seuls les entiers strictement positifs sont acceptés."""
     assert normaliser_entier_positif("215") == 215
     assert normaliser_entier_positif("0") is None
     assert normaliser_entier_positif("-120") is None
@@ -66,28 +69,33 @@ def test_entier_positif():
 
 
 def test_horodatage():
+    """Les deux formats d'horodatage sont lus, un texte illisible est refusé."""
     assert normaliser_horodatage("2026-08-24 08:39:56") == datetime(2026, 8, 24, 8, 39, 56)
     assert normaliser_horodatage("24/08/2026 11:01") == datetime(2026, 8, 24, 11, 1)
     assert normaliser_horodatage("hier") is None
 
 
 def test_date():
+    """Les formats de date reconnus sont lus, les autres refusés."""
     assert normaliser_date("2023-08-07") == date(2023, 8, 7)
     assert normaliser_date("2023/08/07") is None
 
 
 def test_statut():
+    """Les statuts sont normalisés (RG7), un statut inconnu est refusé."""
     assert normaliser_statut("En cours") == "en_cours"
     assert normaliser_statut("RESOLU") == "resolu"
     assert normaliser_statut("ferme") is None
 
 
 def test_station_existe():
+    """Une station doit figurer dans le référentiel."""
     assert station_existe("S001", STATIONS)
     assert not station_existe("S999", STATIONS)
 
 
 def test_usager_ref():
+    """Pseudonyme obligatoire pour un abonné, interdit pour un occasionnel (RG5)."""
     assert usager_ref_valide("abonne", "Ued311b7d")
     assert usager_ref_valide("occasionnel", "")
     assert not usager_ref_valide("abonne", "")
@@ -95,6 +103,7 @@ def test_usager_ref():
 
 
 def test_cible():
+    """Un incident vise soit un vélo, soit une station, jamais les deux (RG6)."""
     assert cible_valide("velo", "V0001", "")
     assert cible_valide("station", "", "S001")
     assert not cible_valide("velo", "V0001", "S001")
@@ -102,6 +111,7 @@ def test_cible():
 
 
 def test_dates_incident():
+    """Date de résolution présente seulement si résolu, et postérieure au signalement (RG8)."""
     signalement = datetime(2026, 7, 4, 13, 0)
     assert dates_incident_valides("resolu", signalement, datetime(2026, 7, 7))
     assert dates_incident_valides("ouvert", signalement, None)
@@ -111,12 +121,14 @@ def test_dates_incident():
 
 
 def test_technicien_manquant():
+    """Un technicien est attendu dès que l'incident est pris en charge."""
     assert technicien_manquant("en_cours", "")
     assert not technicien_manquant("ouvert", "")
     assert not technicien_manquant("resolu", "K. Mercier")
 
 
 def test_doublon():
+    """Une ligne déjà lue est détectée comme doublon."""
     deja_vues = set()
     assert not est_doublon({"a": "1"}, deja_vues)
     assert est_doublon({"a": "1"}, deja_vues)
@@ -125,23 +137,27 @@ def test_doublon():
 # ---------- Lignes complètes ----------
 
 def test_station_valide():
+    """Une station valide est convertie sans avertissement."""
     station, avertissements = fiabiliser_station(STATION)
     assert station["capacite"] == 15
     assert avertissements == []
 
 
 def test_station_capacite_nulle_rejetee():
+    """Une station de capacité nulle est rejetée (RG1)."""
     with pytest.raises(Rejet):
         fiabiliser_station({**STATION, "capacite": "0"})
 
 
 def test_trajet_valide():
+    """Un trajet valide est converti sans avertissement."""
     trajet, avertissements = fiabiliser_trajet(TRAJET, STATIONS)
     assert trajet["duree_secondes"] == 215
     assert avertissements == []
 
 
 def test_trajet_normalise():
+    """Un vélo en minuscules et une date JJ/MM/AAAA sont normalisés avec avertissements."""
     ligne = {**TRAJET, "velo_id": "v1167", "depart_horodatage": "24/08/2026 08:39"}
     trajet, avertissements = fiabiliser_trajet(ligne, STATIONS)
     assert trajet["velo_id"] == "V1167"
@@ -149,29 +165,34 @@ def test_trajet_normalise():
 
 
 def test_trajet_arrivee_vide_acceptee():
+    """Un trajet sans station d'arrivée est accepté (RG3)."""
     trajet, _ = fiabiliser_trajet({**TRAJET, "station_arrivee": ""}, STATIONS)
     assert trajet["station_arrivee"] is None
 
 
 def test_trajet_station_inconnue_rejetee():
+    """Un trajet vers une station inconnue est rejeté."""
     with pytest.raises(Rejet) as erreur:
         fiabiliser_trajet({**TRAJET, "station_arrivee": "S999"}, STATIONS)
     assert erreur.value.colonne == "station_arrivee"
 
 
 def test_trajet_duree_negative_rejetee():
+    """Un trajet de durée négative est rejeté (RG4)."""
     with pytest.raises(Rejet) as erreur:
         fiabiliser_trajet({**TRAJET, "duree_secondes": "-120"}, STATIONS)
     assert erreur.value.colonne == "duree_secondes"
 
 
 def test_incident_valide():
+    """Un incident valide est converti sans avertissement."""
     incident, avertissements = fiabiliser_incident(INCIDENT, STATIONS)
     assert incident["statut"] == "resolu"
     assert avertissements == []
 
 
 def test_incident_statut_normalise_et_technicien_signale():
+    """Le statut est normalisé et l'absence de technicien est signalée."""
     ligne = {**INCIDENT, "statut": "En cours", "date_resolution": "", "technicien": ""}
     incident, avertissements = fiabiliser_incident(ligne, STATIONS)
     assert incident["statut"] == "en_cours"
@@ -179,12 +200,14 @@ def test_incident_statut_normalise_et_technicien_signale():
 
 
 def test_incident_resolution_avant_signalement_rejetee():
+    """Une résolution antérieure au signalement est rejetée (RG8)."""
     with pytest.raises(Rejet) as erreur:
         fiabiliser_incident({**INCIDENT, "date_resolution": "2026-07-03 09:00"}, STATIONS)
     assert erreur.value.colonne == "date_resolution"
 
 
 def test_incident_station_inconnue_rejetee():
+    """Un incident sur une station inconnue est rejeté."""
     ligne = {**INCIDENT, "cible": "station", "velo_id": "", "station_id": "S999"}
     with pytest.raises(Rejet):
         fiabiliser_incident(ligne, STATIONS)

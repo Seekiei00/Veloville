@@ -17,6 +17,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/login")
 def login(identifiants: LoginSchema, db: Session = Depends(get_db)):
+    """Vérifie les identifiants et renvoie un JWT avec le rôle ; 401 si invalides."""
     utilisateur = db.scalar(select(Utilisateur).where(Utilisateur.username == identifiants.username))
 
     # Même message si l'identifiant est inconnu ou si le mot de passe est faux

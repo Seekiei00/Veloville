@@ -19,6 +19,7 @@ jeton = st.session_state["jeton"]
 
 @st.cache_data(ttl=3600)  # la liste des communes change rarement : on la garde 1 h
 def charger_communes(_jeton):
+    """Renvoie la liste triée des communes des stations (mise en cache 1 h)."""
     communes = set()
     for page in [1, 2]:  # 120 stations = 2 pages de 100
         reponse = lire("/stations", _jeton, {"page": page, "taille_page": 100})

@@ -25,4 +25,5 @@ def lister_trajets(
     taille_page: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
+    """Liste paginée des trajets, filtrable par période et par station (départ ou arrivée)."""
     return consultation.lister_trajets(db, date_debut, date_fin, station, page, taille_page)

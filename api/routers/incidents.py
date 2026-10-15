@@ -24,11 +24,13 @@ def lister_incidents(
     taille_page: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
+    """Liste paginée des incidents, filtrable par statut, plus récents en premier."""
     return consultation.lister_incidents(db, statut, page, taille_page)
 
 
 @router.put("/{incident_id}/statut", response_model=IncidentSchema, dependencies=[Depends(exiger_exploitant)])
 def modifier_statut(incident_id: str, corps: ChangementStatut, db: Session = Depends(get_db)):
+    """Change le statut d'un incident (exploitant) ; 404 si absent, 422 si transition interdite."""
     try:
         incident = consultation.changer_statut(db, incident_id, corps.statut)
     except ValueError:

@@ -10,6 +10,7 @@ sys.path.append(str(Path(__file__).resolve().parents[2] / "front"))
 import api_client 
 
 def test_api_injoignable_message_en_francais(monkeypatch):
+    """Une API injoignable lève ErreurApi avec un message en français."""
     monkeypatch.setattr(api_client, "API_URL", "http://127.0.0.1:9")  # port fermé
     with pytest.raises(api_client.ErreurApi) as erreur:
         api_client.lire("/stations", "jeton")
